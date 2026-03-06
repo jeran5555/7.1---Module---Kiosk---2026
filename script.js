@@ -21,25 +21,51 @@ function filterCategory(event, categoryId) {
     renderMenu(categoryId);
 }
 
+const PRINTER_VENDORS = [
+    { vendorId: 0x0483 }, // Xprinter / STM
+    { vendorId: 0x04b8 }, // Epson
+    { vendorId: 0x0456 }, // Microtek
+    { vendorId: 0x067b }  // Prolific
+];
+
+let selectedPrinter = null;
+
 function setupEventListeners() {
-    document.getElementById('checkout-btn').addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent modal toggle if bubbling
+    document.getElementById('checkout-btn').addEventListener('click', async (e) => {
+        e.stopPropagation();
         if (cart.length > 0) {
             const btn = document.getElementById('checkout-btn');
             const originalText = btn.textContent;
-            btn.textContent = "Printing Ticket...";
-            btn.style.backgroundColor = "#555";
+            btn.textContent = "Processing...";
+            btn.disabled = true;
 
-            setTimeout(() => {
-                const orderNum = Math.floor(Math.random() * 99) + 1;
-                const paddedNum = orderNum.toString().padStart(2, '0');
-                alert(`Order Number: #${paddedNum}\nPlease take your receipt!`);
+            const orderNum = Math.floor(Math.random() * 99) + 1;
+            const paddedNum = orderNum.toString().padStart(2, '0');
+
+            try {
+                // Try to print physical receipt
+                const printed = await printUSBReceipt(paddedNum);
+
+                if (printed) {
+                    alert(`Order Number: #${paddedNum}\nReceipt printed! Thank you for your visit.`);
+                } else {
+                    // Fallback to just alert if printing was cancelled or failed but we continue
+                    alert(`Order Number: #${paddedNum}\n(Digital Receipt) Thank you for your visit!`);
+                }
+
+                // Success flow
                 cart = [];
                 updateCart();
+                if (document.getElementById('cart-modal').classList.contains('open')) {
+                    toggleCart();
+                }
+            } catch (error) {
+                console.error("Checkout error:", error);
+                alert("Something went wrong with your order. Please try again.");
+            } finally {
                 btn.textContent = originalText;
-                btn.style.backgroundColor = "";
-                // toggleCart(); 
-            }, 1000);
+                btn.disabled = false;
+            }
         } else {
             alert('Your tray is empty!');
         }
@@ -54,6 +80,91 @@ function setupEventListeners() {
             }
         });
     }
+}
+
+async function printUSBReceipt(orderNum) {
+    if (!navigator.usb) {
+        console.warn("WebUSB not supported in this browser.");
+        return false;
+    }
+
+    try {
+        // Find or request device
+        if (!selectedPrinter) {
+            const devices = await navigator.usb.getDevices();
+            selectedPrinter = devices.find(d => PRINTER_VENDORS.some(v => v.vendorId === d.vendorId));
+
+            if (!selectedPrinter) {
+                selectedPrinter = await navigator.usb.requestDevice({ filters: PRINTER_VENDORS });
+            }
+        }
+
+        await selectedPrinter.open();
+        if (selectedPrinter.configuration === null) {
+            await selectedPrinter.selectConfiguration(1);
+        }
+        await selectedPrinter.claimInterface(0);
+
+        const encoder = new TextEncoder();
+        const receiptText = buildReceiptText(orderNum);
+
+        // Find correct endpoint
+        const endpoints = selectedPrinter.configuration.interfaces[0].alternates[0].endpoints;
+        const outEndpoint = endpoints.find(e => e.direction === 'out');
+
+        if (!outEndpoint) throw new Error("Output endpoint not found");
+
+        await selectedPrinter.transferOut(outEndpoint.endpointNumber, encoder.encode(receiptText));
+
+        // Brief delay before closing
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await selectedPrinter.close();
+
+        return true;
+    } catch (error) {
+        console.error("Printing failed:", error);
+        // Important: we don't block the order even if printing fails, 
+        // but we return false to indicate no physical receipt.
+        return false;
+    }
+}
+
+function buildReceiptText(orderNum) {
+    let total = 0;
+    let itemsText = "";
+
+    cart.forEach(item => {
+        const linePrice = (item.price * item.quantity).toFixed(2);
+        total += item.price * item.quantity;
+
+        // Formatting: "Qty x Name" padded to fit columns
+        const namePart = `${item.quantity}x ${item.name}`.substring(0, 22);
+        const pricePart = linePrice.padStart(8);
+        itemsText += `${namePart.padEnd(22)}${pricePart}\n`;
+    });
+
+    const dateStr = new Date().toLocaleString('nl-NL');
+
+    return "\x1B\x40" +                     // Initialize printer
+        "\x1B\x61\x01" +                   // Center align
+        "\x1B\x21\x30" +                   // Double height/width
+        "HAPPY HERBIVORE\n" +
+        "\x1B\x21\x00" +                   // Reset font
+        "Eet Smakelijk!\n" +
+        "--------------------------------\n" +
+        "\x1B\x61\x00" +                   // Left align
+        `Bestelling: #${orderNum}\n` +
+        `Datum: ${dateStr}\n` +
+        "--------------------------------\n" +
+        itemsText +
+        "--------------------------------\n" +
+        "\x1B\x21\x10" +                   // Bold
+        `TOTAAL:          EUR ${total.toFixed(2).padStart(8)}\n` +
+        "\x1B\x21\x00" +                   // Reset
+        "--------------------------------\n" +
+        "\x1B\x61\x01" +                   // Center align
+        "\nBedankt voor uw bezoek!\n\n" +
+        "\x1D\x56\x00";                    // Cut paper
 }
 
 function renderMenu(categoryId) {
