@@ -34,8 +34,8 @@ body {
 
 /* --- Kiosk Screen Container --- */
 .app-container {
-    width: 100%;
-    max-width: 550px;
+    width: 1080px;
+
     /* Portrait Ratio Width */
     height: 100vh;
     /* Or 95vh for borders */
@@ -120,20 +120,30 @@ body {
 }
 
 /* --- Header & Nav --- */
-.header {
+.header-container {
     background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    z-index: 100;
+}
+
+.header-top {
     padding: 1rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: var(--shadow-sm);
-    z-index: 100;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .brand-mini {
     font-weight: 800;
     color: var(--primary-green);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+}
+
+.brand-mini span {
+    color: var(--primary-orange);
 }
 
 /* Horizontal Scroll Nav */
@@ -153,7 +163,7 @@ body {
 
 .category-chip {
     flex: 0 0 auto;
-    padding: 0.6rem 1.2rem;
+    padding: 0.8rem 1.5rem;
     background: var(--surface);
     border-radius: 50px;
     font-weight: 600;
@@ -162,12 +172,19 @@ body {
     transition: all 0.2s;
     box-shadow: var(--shadow-sm);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .category-chip.active {
     background: var(--primary-green);
     color: white;
     box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+}
+
+.category-chip .category-icon {
+    font-size: 1.2rem;
 }
 
 /* --- Menu Grid --- */

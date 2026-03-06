@@ -29,40 +29,42 @@ $productsJson = json_encode($products);
     </div>
 
     <div class="app-container">
-        <!-- Sidebar Navigation (Icons) -->
-        <nav class="category-sidebar">
-            <button class="category-btn active" onclick="filterCategory(event, 'all')">
-                <span class="category-icon">🌿</span>
-                <span class="category-label">All</span>
-            </button>
-            <?php foreach ($categories as $category): ?>
-                <button class="category-btn" onclick="filterCategory(event, <?php echo $category['category_id']; ?>)">
-                    <span class="category-icon">
-                        <?php
-                        // Simple icon mapping based on name
-                        $name = strtolower($category['name']);
-                        if (strpos($name, 'breakfast') !== false)
-                            echo '🍳';
-                        elseif (strpos($name, 'lunch') !== false)
-                            echo '🥗';
-                        elseif (strpos($name, 'handhelds') !== false)
-                            echo '🌯';
-                        elseif (strpos($name, 'sides') !== false)
-                            echo '🍟';
-                        elseif (strpos($name, 'dips') !== false)
-                            echo '🏺';
-                        elseif (strpos($name, 'drinks') !== false)
-                            echo '🥤';
-                        else
-                            echo '🍴';
-                        ?>
-                    </span>
-                    <span class="category-label">
-                        <?php echo htmlspecialchars($category['name']); ?>
-                    </span>
+        <!-- Top Header & Navigation -->
+        <header class="header-container">
+            <div class="header-top">
+                <div class="brand-mini">Happy <span>Herbivore</span></div>
+            </div>
+            <nav class="category-nav">
+                <button class="category-chip active" onclick="filterCategory(event, 'all')">
+                    <span class="category-icon">🌿</span>
+                    <span class="category-label">All</span>
                 </button>
-            <?php endforeach; ?>
-        </nav>
+                <?php foreach ($categories as $category): ?>
+                    <button class="category-chip" onclick="filterCategory(event, <?php echo $category['category_id']; ?>)">
+                        <span class="category-icon">
+                            <?php
+                            $name = strtolower($category['name']);
+                            if (strpos($name, 'breakfast') !== false)
+                                echo '🍳';
+                            elseif (strpos($name, 'lunch') !== false)
+                                echo '🥗';
+                            elseif (strpos($name, 'handhelds') !== false)
+                                echo '🌯';
+                            elseif (strpos($name, 'sides') !== false)
+                                echo '🍟';
+                            elseif (strpos($name, 'dips') !== false)
+                                echo '🏺';
+                            elseif (strpos($name, 'drinks') !== false)
+                                echo '🥤';
+                            else
+                                echo '🍴';
+                            ?>
+                        </span>
+                        <span class="category-label"><?php echo htmlspecialchars($category['name']); ?></span>
+                    </button>
+                <?php endforeach; ?>
+            </nav>
+        </header>
 
         <!-- Main Content (Grid) -->
         <main class="menu-section">
@@ -72,25 +74,54 @@ $productsJson = json_encode($products);
             </div>
         </main>
 
-        <!-- Right Cart Sidebar -->
-        <aside class="cart-sidebar">
-            <div class="cart-header">My Order</div>
+        <!-- Bottom Cart Bar -->
+        <div class="bottom-bar">
+            <div class="cart-summary-text">
+                <span class="summary-label">Your Tray</span>
+                <span id="bar-total" class="summary-total">€0.00</span>
+            </div>
+            <button class="view-order-btn" onclick="toggleCart()">View Order</button>
+        </div>
 
-            <div id="cart-items" class="cart-items">
-                <!-- Cart items here -->
-                <div style="text-align: center; margin-top: auto; margin-bottom: auto; color: #aaa;">
-                    Your tray is empty
+        <!-- Cart Modal Overlay -->
+        <div id="cart-modal" class="cart-modal">
+            <div class="cart-content">
+                <div class="modal-header">
+                    <h2>Your Order</h2>
+                    <button class="close-btn" onclick="toggleCart()">✕</button>
+                </div>
+                <div id="cart-items-list" class="cart-items-list">
+                    <!-- Cart items here -->
+                </div>
+                <div class="modal-footer">
+                    <div class="summary-total" style="margin-bottom: 20px;">
+                        <span>Total:</span>
+                        <span id="modal-total">€0.00</span>
+                    </div>
+                    <button id="checkout-btn" class="checkout-btn"
+                        style="width: 100%; padding: 1.2rem; background: var(--primary-green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Pay
+                        Now</button>
                 </div>
             </div>
+        </div>
 
-            <div class="cart-summary">
-                <div class="summary-total">
-                    <span style="font-size: 1rem; color: #777;">Total</span>
-                    <span id="total-price">€0.00</span>
+        <!-- Extras Modal Overlay -->
+        <div id="extras-modal" class="cart-modal">
+            <div class="cart-content" style="height: 60%;">
+                <div class="modal-header">
+                    <h2>Zou je er nog wat bij willen?</h2>
+                    <button class="close-btn" onclick="closeExtras()">✕</button>
                 </div>
-                <button id="checkout-btn" class="checkout-btn">Pay Now</button>
+                <div id="extras-list" class="cart-items-list">
+                    <!-- Extras items injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button onclick="addSelectedExtras()" class="checkout-btn"
+                        style="width: 100%; padding: 1.2rem; background: var(--primary-orange); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Add
+                        to Order</button>
+                </div>
             </div>
-        </aside>
+        </div>
     </div>
 
     <script>

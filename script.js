@@ -71,6 +71,7 @@ function renderMenu(categoryId) {
         card.className = 'menu-item-card';
         card.style.animation = `fadeIn 0.4s ease-out ${delay}s forwards`;
         card.style.opacity = '0'; // For animation
+        card.onclick = () => showExtras(item.product_id); // Entire card clickable
         card.innerHTML = `
             <img src="images/${item.image}" alt="${item.name}" class="item-image" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop'">
             <div class="item-info">
@@ -78,7 +79,7 @@ function renderMenu(categoryId) {
                 <div style="font-size: 0.75rem; color: #777; margin-bottom: 0.5rem;">${item.kcal} kcal</div>
                 <div style="font-size: 0.8rem; color: #555; margin-bottom: 1rem; line-height: 1.4;">${item.description}</div>
                 <div class="item-price">€${parseFloat(item.price).toFixed(2)}</div>
-                <button class="add-btn" onclick="addToCart(event, ${item.product_id})">
+                <button class="add-btn">
                     ADD +
                 </button>
             </div>
@@ -96,16 +97,66 @@ function renderMenu(categoryId) {
     }
 }
 
-function addToCart(event, productId) {
-    // Animate button
-    const btn = event.target;
-    btn.textContent = "ADDED";
-    btn.style.backgroundColor = "#2E7D32";
-    setTimeout(() => {
-        btn.textContent = "ADD +";
-        btn.style.backgroundColor = "";
-    }, 800);
+let pendingProduct = null;
 
+function showExtras(productId) {
+    pendingProduct = menuItems.find(i => parseInt(i.product_id) === parseInt(productId));
+    const extrasList = document.getElementById('extras-list');
+    extrasList.innerHTML = '';
+
+    // Filter for Sides (4) and Dips (5)
+    const extras = menuItems.filter(i => [4, 5].includes(parseInt(i.category_id)));
+
+    extras.forEach(extra => {
+        const row = document.createElement('div');
+        row.className = 'cart-item-row';
+        row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <input type="checkbox" id="extra-${extra.product_id}" class="extra-checkbox" value="${extra.product_id}" style="width: 20px; height: 20px;">
+                <label for="extra-${extra.product_id}">
+                    <div style="font-weight: 600;">${extra.name}</div>
+                    <div style="font-size: 0.85rem; color: #777;">€${parseFloat(extra.price).toFixed(2)}</div>
+                </label>
+            </div>
+        `;
+        row.onclick = (e) => {
+            if (e.target.tagName !== 'INPUT') {
+                const cb = row.querySelector('input');
+                cb.checked = !cb.checked;
+            }
+        };
+        extrasList.appendChild(row);
+    });
+
+    document.getElementById('extras-modal').classList.add('open');
+}
+
+function closeExtras() {
+    document.getElementById('extras-modal').classList.remove('open');
+    pendingProduct = null;
+}
+
+function addSelectedExtras() {
+    if (!pendingProduct) return;
+
+    // Add the main product
+    addToCartSimple(pendingProduct.product_id);
+
+    // Add selected extras
+    const checkboxes = document.querySelectorAll('.extra-checkbox:checked');
+    checkboxes.forEach(cb => {
+        addToCartSimple(cb.value);
+    });
+
+    closeExtras();
+
+    // Show feedback
+    const bar = document.querySelector('.bottom-bar');
+    bar.style.transform = 'scale(1.05)';
+    setTimeout(() => bar.style.transform = 'scale(1)', 200);
+}
+
+function addToCartSimple(productId) {
     const item = menuItems.find(i => parseInt(i.product_id) === parseInt(productId));
     const existingItem = cart.find(i => parseInt(i.product_id) === parseInt(productId));
 
@@ -115,6 +166,11 @@ function addToCart(event, productId) {
         cart.push({ ...item, quantity: 1 });
     }
     updateCart();
+}
+
+function addToCart(event, productId) {
+    event.stopPropagation();
+    showExtras(productId);
 }
 
 function updateCart() {
@@ -172,3 +228,6 @@ window.filterCategory = filterCategory;
 window.addToCart = addToCart;
 window.updateQty = updateQty;
 window.toggleCart = toggleCart;
+window.showExtras = showExtras;
+window.closeExtras = closeExtras;
+window.addSelectedExtras = addSelectedExtras;
