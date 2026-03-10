@@ -53,22 +53,8 @@ function setupEventListeners() {
                     toggleCart();
                 }
 
-                // Show end screen instead of alert
-                const endScreen = document.getElementById('end-screen');
-                if (endScreen) {
-                    const orderNumEl = document.getElementById('end-order-num');
-                    if (orderNumEl) orderNumEl.textContent = `Bestelling: #${paddedNum}`;
-
-                    endScreen.classList.remove('hidden');
-
-                    // After 5 seconds, return to index.html
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 5000);
-                } else {
-                    // Fallback if end screen doesn't exist
-                    alert(`Order Number: #${paddedNum}\nThank you for your visit!`);
-                }
+                // Redirect to separate end screen
+                window.location.href = `end.html?order=${paddedNum}`;
             } catch (error) {
                 console.error("Checkout error:", error);
                 alert("Something went wrong with your order. Please try again.");

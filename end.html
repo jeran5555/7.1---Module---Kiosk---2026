@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedankt voor je bestelling!</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- End Screen -->
+        <div id="end-screen" class="start-screen"
+            style="z-index: 2000; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <img src="logo/logo_big_dinosaur_transparent.webp" alt="Happy Herbivore Logo" class="start-logo-img">
+            <div class="start-logo" style="margin-bottom: 0.5rem;">Bedankt <span>voor je bestelling!</span></div>
+            <div id="end-order-num"
+                style="font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-orange);">
+                Bestelling: #--</div>
+            <div style="font-size: 1.2rem; font-weight: 600;">Uw bonnetje wordt geprint.</div>
+            <div style="font-size: 1rem; margin-top: 2rem; opacity: 0.8;">Een moment geduld aub...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get order number from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderNum = urlParams.get('order');
+
+            if (orderNum) {
+                document.getElementById('end-order-num').textContent = `Bestelling: #${orderNum}`;
+            }
+
+            // Redirect back to start screen after 5 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 5000);
+        });
+    </script>
+</body>
+
+</html>

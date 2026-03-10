@@ -164,17 +164,6 @@ $productsJson = json_encode($products);
             </div>
         </div>
 
-        <!-- End Screen Overlay -->
-        <div id="end-screen" class="start-screen hidden"
-            style="z-index: 2000; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-            <img src="logo/logo_big_dinosaur_transparent.webp" alt="Happy Herbivore Logo" class="start-logo-img">
-            <div class="start-logo" style="margin-bottom: 0.5rem;">Bedankt <span>voor je bestelling!</span></div>
-            <div id="end-order-num"
-                style="font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-orange);">
-                Bestelling: #--</div>
-            <div style="font-size: 1.2rem; font-weight: 600;">Uw bonnetje wordt geprint.</div>
-            <div style="font-size: 1rem; margin-top: 2rem; opacity: 0.8;">Een moment geduld aub...</div>
-        </div>
     </div>
 
     <script>
