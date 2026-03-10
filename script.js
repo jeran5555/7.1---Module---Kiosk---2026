@@ -141,6 +141,12 @@ function buildReceiptText(orderNum) {
         const namePart = `${item.quantity}x ${item.name}`.substring(0, 22);
         const pricePart = linePrice.padStart(8);
         itemsText += `${namePart.padEnd(22)}${pricePart}\n`;
+
+        if (item.customizations && item.customizations.length > 0) {
+            item.customizations.forEach(cust => {
+                itemsText += `  - ${cust}\n`;
+            });
+        }
     });
 
     const dateStr = new Date().toLocaleString('nl-NL');
@@ -269,12 +275,15 @@ function addSelectedExtras() {
 
 function addToCartSimple(productId) {
     const item = menuItems.find(i => parseInt(i.product_id) === parseInt(productId));
-    const existingItem = cart.find(i => parseInt(i.product_id) === parseInt(productId));
+    // We only group items together if they have EXACTLY the same customizations.
+    // By default, new items have no customizations.
+    const existingItem = cart.find(i => parseInt(i.product_id) === parseInt(productId) && (!i.customizations || i.customizations.length === 0));
 
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({ ...item, quantity: 1 });
+        // Create a unique cart item ID
+        cart.push({ ...item, quantity: 1, cartItemId: Date.now() + Math.random(), customizations: [] });
     }
     updateCart();
 }
@@ -302,15 +311,23 @@ function updateCart() {
         if (list) {
             const el = document.createElement('div');
             el.className = 'cart-item-row';
+
+            let customizationsHtml = '';
+            if (item.customizations && item.customizations.length > 0) {
+                customizationsHtml = `<div class="customizations-text">${item.customizations.join(', ')}</div>`;
+            }
+
             el.innerHTML = `
-                <div>
+                <div style="flex: 1; padding-right: 15px;">
                     <div style="font-weight: 600;">${item.name}</div>
                     <div style="font-size: 0.85rem; color: #777;">€${price.toFixed(2)}</div>
+                    ${customizationsHtml}
+                    <button class="customize-btn" onclick="openCustomizeModal('${item.cartItemId}')">Aanpassen</button>
                 </div>
                 <div class="qty-controls">
-                    <button class="qty-btn" onclick="updateQty(${item.product_id}, -1)">-</button>
+                    <button class="qty-btn" onclick="updateQty('${item.cartItemId}', -1)">-</button>
                     <span style="font-weight: 600; width: 20px; text-align: center;">${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateQty(${item.product_id}, 1)">+</button>
+                    <button class="qty-btn" onclick="updateQty('${item.cartItemId}', 1)">+</button>
                 </div>
             `;
             list.appendChild(el);
@@ -322,8 +339,8 @@ function updateCart() {
     if (modalTotal) modalTotal.textContent = fmtTotal;
 }
 
-function updateQty(productId, change) {
-    const itemIndex = cart.findIndex(i => parseInt(i.product_id) === parseInt(productId));
+function updateQty(cartItemId, change) {
+    const itemIndex = cart.findIndex(i => i.cartItemId.toString() === cartItemId.toString());
     if (itemIndex > -1) {
         cart[itemIndex].quantity += change;
         if (cart[itemIndex].quantity <= 0) {
@@ -331,6 +348,60 @@ function updateQty(productId, change) {
         }
         updateCart();
     }
+}
+
+let activeCustomizeItemId = null;
+
+function openCustomizeModal(cartItemId) {
+    activeCustomizeItemId = cartItemId;
+    const item = cart.find(i => i.cartItemId.toString() === cartItemId.toString());
+
+    // Reset all checkboxes
+    document.querySelectorAll('.customize-checkbox').forEach(cb => {
+        cb.checked = false;
+        // Pre-check if this item already has these customizations
+        if (item && item.customizations && item.customizations.includes(cb.value)) {
+            cb.checked = true;
+        }
+    });
+
+    document.getElementById('customize-modal').classList.add('open');
+}
+
+function closeCustomizeModal() {
+    document.getElementById('customize-modal').classList.remove('open');
+    activeCustomizeItemId = null;
+}
+
+function saveCustomizations() {
+    if (!activeCustomizeItemId) return;
+
+    const itemIndex = cart.findIndex(i => i.cartItemId.toString() === activeCustomizeItemId.toString());
+    if (itemIndex === -1) return;
+
+    const selectedOptions = Array.from(document.querySelectorAll('.customize-checkbox:checked')).map(cb => cb.value);
+
+    // Check if there is another item in cart with the SAME product_id and SAME customizations
+    // If so, merge them. Otherwise, update this item's customizations.
+    const currentItem = cart[itemIndex];
+
+    const matchingExistingIndex = cart.findIndex(i =>
+        i.cartItemId !== currentItem.cartItemId &&
+        i.product_id === currentItem.product_id &&
+        JSON.stringify(i.customizations || []) === JSON.stringify(selectedOptions)
+    );
+
+    if (matchingExistingIndex !== -1) {
+        // Merge into existing and remove this one
+        cart[matchingExistingIndex].quantity += currentItem.quantity;
+        cart.splice(itemIndex, 1);
+    } else {
+        // Just update this one
+        cart[itemIndex].customizations = selectedOptions;
+    }
+
+    closeCustomizeModal();
+    updateCart();
 }
 
 // Global Exports
@@ -342,3 +413,6 @@ window.toggleCart = toggleCart;
 window.showExtras = showExtras;
 window.closeExtras = closeExtras;
 window.addSelectedExtras = addSelectedExtras;
+window.openCustomizeModal = openCustomizeModal;
+window.closeCustomizeModal = closeCustomizeModal;
+window.saveCustomizations = saveCustomizations;

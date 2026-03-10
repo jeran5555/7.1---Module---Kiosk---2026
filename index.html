@@ -21,14 +21,14 @@ $productsJson = json_encode($products);
 
 <body>
 
-    <!-- Start Screen Overlay -->
-    <div id="start-screen" class="start-screen">
-        <img src="logo/logo_big_dinosaur_transparent.webp" alt="Happy Herbivore Logo" class="start-logo-img">
-        <div class="start-logo">Happy <span>Herbivore</span></div>
-        <div class="start-cta" onclick="hideStartScreen()">Touch To Start</div>
-    </div>
-
     <div class="app-container">
+        <!-- Start Screen Overlay -->
+        <div id="start-screen" class="start-screen">
+            <img src="logo/logo_big_dinosaur_transparent.webp" alt="Happy Herbivore Logo" class="start-logo-img">
+            <div class="start-logo">Happy <span>Herbivore</span></div>
+            <div class="start-cta" onclick="hideStartScreen()">Touch To Start</div>
+        </div>
+
         <!-- Top Header & Navigation -->
         <header class="header-container">
             <div class="header-top">
@@ -119,6 +119,46 @@ $productsJson = json_encode($products);
                     <button onclick="addSelectedExtras()" class="checkout-btn"
                         style="width: 100%; padding: 1.2rem; background: var(--primary-orange); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Add
                         to Order</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customize Modal Overlay -->
+        <div id="customize-modal" class="cart-modal">
+            <div class="cart-content" style="height: 60%;">
+                <div class="modal-header">
+                    <h2>Product Aanpassen</h2>
+                    <button class="close-btn" onclick="closeCustomizeModal()">✕</button>
+                </div>
+                <div class="cart-items-list">
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-saus').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-saus" class="customize-checkbox" value="Zonder saus" style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder saus</label>
+                        </div>
+                    </div>
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-sla').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-sla" class="customize-checkbox" value="Zonder sla" style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder sla</label>
+                        </div>
+                    </div>
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-tomaat').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-tomaat" class="customize-checkbox" value="Zonder tomaat" style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder tomaat</label>
+                        </div>
+                    </div>
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-ui').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-ui" class="customize-checkbox" value="Zonder ui" style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder ui</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="saveCustomizations()" class="checkout-btn"
+                        style="width: 100%; padding: 1.2rem; background: var(--primary-green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Opslaan</button>
                 </div>
             </div>
         </div>
