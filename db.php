@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$db = 'healthy_restaurant';
-$user = 'root';
-$pass = '';
+$db = 'u240162_kiosk';
+$user = 'u240162_kiosk';
+$pass = 'CgPVFbx8a6Xat8XsnBcc';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
