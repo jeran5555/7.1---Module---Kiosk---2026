@@ -1,45 +1,175 @@
 <?php
-require 'db.php';
+require_once 'db.php';
 
-$sql = "
-SELECT p.*, c.name as category_name, i.filename 
-FROM products p
-JOIN categories c ON p.category_id = c.category_id
-LEFT JOIN images i ON p.image_id = i.image_id
-ORDER BY c.category_id
-";
+$categories = getCategories($pdo);
+$products = getProducts($pdo);
 
-$stmt = $pdo->query($sql);
-$products = $stmt->fetchAll();
-
-$currentCategory = "";
-
-foreach ($products as $product) {
-
-    if ($currentCategory != $product['category_name']) {
-        $currentCategory = $product['category_name'];
-        echo "<h2 style='margin-top:40px;'>" . $currentCategory . "</h2>";
-    }
-
-    echo "<div style='
-        border:1px solid #ddd;
-        padding:15px;
-        margin:15px 0;
-        border-radius:10px;
-        display:flex;
-        gap:20px;
-        align-items:center;
-    '>";
-
-    echo "<img src='images/" . $product['filename'] . "' 
-              style='width:120px;height:120px;object-fit:cover;border-radius:10px;'>";
-
-    echo "<div>";
-    echo "<h3>" . $product['name'] . "</h3>";
-    echo "<p>" . $product['description'] . "</p>";
-    echo "<strong>€" . $product['price'] . " | " . $product['kcal'] . " kcal</strong>";
-    echo "</div>";
-
-    echo "</div>";
-}
+// Encode products for JavaScript
+$productsJson = json_encode($products);
 ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Herbivore Menu</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Top Header & Navigation -->
+        <header class="header-container">
+            <div class="header-top" style="position: relative;">
+                <!-- Back Button to return to Start Screen -->
+                <button onclick="window.location.href='index.html'"
+                    style="position: absolute; left: 15px; top: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">🔙</button>
+                <div class="brand-mini">Happy <span>Herbivore</span></div>
+            </div>
+            <nav class="category-nav">
+                <button class="category-chip active" onclick="filterCategory(event, 'all')">
+                    <span class="category-icon">🌿</span>
+                    <span class="category-label">All</span>
+                </button>
+                <?php foreach ($categories as $category): ?>
+                    <button class="category-chip" onclick="filterCategory(event, <?php echo $category['category_id']; ?>)">
+                        <span class="category-icon">
+                            <?php
+                            $name = strtolower($category['name']);
+                            if (strpos($name, 'breakfast') !== false)
+                                echo '🍳';
+                            elseif (strpos($name, 'lunch') !== false)
+                                echo '🥗';
+                            elseif (strpos($name, 'handhelds') !== false)
+                                echo '🌯';
+                            elseif (strpos($name, 'sides') !== false)
+                                echo '🍟';
+                            elseif (strpos($name, 'dips') !== false)
+                                echo '🏺';
+                            elseif (strpos($name, 'drinks') !== false)
+                                echo '🥤';
+                            else
+                                echo '🍴';
+                            ?>
+                        </span>
+                        <span class="category-label"><?php echo htmlspecialchars($category['name']); ?></span>
+                    </button>
+                <?php endforeach; ?>
+            </nav>
+        </header>
+
+        <!-- Main Content (Grid) -->
+        <main class="menu-section">
+            <h2 id="section-title" class="section-title">Our Menu</h2>
+            <div id="menu-grid" class="menu-grid">
+                <!-- Menu items injected here -->
+            </div>
+        </main>
+
+        <!-- Bottom Cart Bar -->
+        <div class="bottom-bar">
+            <div class="cart-summary-text">
+                <span class="summary-label">Your Tray</span>
+                <span id="bar-total" class="summary-total">€0.00</span>
+            </div>
+            <button class="view-order-btn" onclick="toggleCart()">View Order</button>
+        </div>
+
+        <!-- Cart Modal Overlay -->
+        <div id="cart-modal" class="cart-modal">
+            <div class="cart-content">
+                <div class="modal-header">
+                    <h2>Your Order</h2>
+                    <button class="close-btn" onclick="toggleCart()">✕</button>
+                </div>
+                <div id="cart-items-list" class="cart-items-list">
+                    <!-- Cart items here -->
+                </div>
+                <div class="modal-footer">
+                    <div class="summary-total" style="margin-bottom: 20px;">
+                        <span>Total:</span>
+                        <span id="modal-total">€0.00</span>
+                    </div>
+                    <button id="checkout-btn" class="checkout-btn"
+                        style="width: 100%; padding: 1.2rem; background: var(--primary-green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Pay
+                        Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extras Modal Overlay -->
+        <div id="extras-modal" class="cart-modal">
+            <div class="cart-content" style="height: 60%;">
+                <div class="modal-header">
+                    <h2>Zou je er nog wat bij willen?</h2>
+                    <button class="close-btn" onclick="closeExtras()">✕</button>
+                </div>
+                <div id="extras-list" class="cart-items-list">
+                    <!-- Extras items injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button onclick="addSelectedExtras()" class="checkout-btn"
+                        style="width: 100%; padding: 1.2rem; background: var(--primary-orange); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Add
+                        to Order</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customize Modal Overlay -->
+        <div id="customize-modal" class="cart-modal">
+            <div class="cart-content" style="height: 60%;">
+                <div class="modal-header">
+                    <h2>Product Aanpassen</h2>
+                    <button class="close-btn" onclick="closeCustomizeModal()">✕</button>
+                </div>
+                <div class="cart-items-list">
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-saus').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-saus" class="customize-checkbox" value="Zonder saus"
+                                style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder saus</label>
+                        </div>
+                    </div>
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-sla').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-sla" class="customize-checkbox" value="Zonder sla"
+                                style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder sla</label>
+                        </div>
+                    </div>
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-tomaat').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-tomaat" class="customize-checkbox"
+                                value="Zonder tomaat" style="width: 20px; height: 20px;"
+                                onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder tomaat</label>
+                        </div>
+                    </div>
+                    <div class="cart-item-row" onclick="document.getElementById('opt-zonder-ui').click()">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="checkbox" id="opt-zonder-ui" class="customize-checkbox" value="Zonder ui"
+                                style="width: 20px; height: 20px;" onclick="event.stopPropagation()">
+                            <label style="font-weight: 600;">Zonder ui</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="saveCustomizations()" class="checkout-btn"
+                        style="width: 100%; padding: 1.2rem; background: var(--primary-green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 1.2rem;">Opslaan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data from Database
+        const dbMenuItems = <?php echo $productsJson; ?>;
+    </script>
+    <script src="script.js"></script>
+</body>
+
+</html>
