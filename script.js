@@ -46,18 +46,28 @@ function setupEventListeners() {
                 // Try to print physical receipt
                 const printed = await printUSBReceipt(paddedNum);
 
-                if (printed) {
-                    alert(`Order Number: #${paddedNum}\nReceipt printed! Thank you for your visit.`);
-                } else {
-                    // Fallback to just alert if printing was cancelled or failed but we continue
-                    alert(`Order Number: #${paddedNum}\n(Digital Receipt) Thank you for your visit!`);
-                }
-
                 // Success flow
                 cart = [];
                 updateCart();
                 if (document.getElementById('cart-modal').classList.contains('open')) {
                     toggleCart();
+                }
+
+                // Show end screen instead of alert
+                const endScreen = document.getElementById('end-screen');
+                if (endScreen) {
+                    const orderNumEl = document.getElementById('end-order-num');
+                    if (orderNumEl) orderNumEl.textContent = `Bestelling: #${paddedNum}`;
+
+                    endScreen.classList.remove('hidden');
+
+                    // After 5 seconds, return to index.html
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 5000);
+                } else {
+                    // Fallback if end screen doesn't exist
+                    alert(`Order Number: #${paddedNum}\nThank you for your visit!`);
                 }
             } catch (error) {
                 console.error("Checkout error:", error);
