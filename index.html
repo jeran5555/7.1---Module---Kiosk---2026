@@ -13,8 +13,16 @@
 <body>
 
     <div class="app-container">
+        <!-- Background Slideshow -->
+        <div class="slideshow-bg">
+            <div class="slide" style="background-image: url('images/smoky_bbq_jackfruit_slider.png');"></div>
+            <div class="slide" style="background-image: url('images/morning_boost_acai_bowl.png');"></div>
+            <div class="slide" style="background-image: url('images/zesty_chickpea_hummus_wrap.png');"></div>
+            <div class="bg-overlay"></div>
+        </div>
+
         <!-- Start Screen (Now the main screen of this file) -->
-        <div id="start-screen" class="start-screen" style="z-index: 10;">
+        <div id="start-screen" class="start-screen" style="z-index: 10; background: transparent;">
             <img src="logo/logo_big_dinosaur_transparent.webp" alt="Happy Herbivore Logo" class="start-logo-img">
             <div class="start-logo">Happy <span>Herbivore</span></div>
             <!-- When touched, navigates to menu.php -->

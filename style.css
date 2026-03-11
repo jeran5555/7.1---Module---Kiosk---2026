@@ -407,3 +407,77 @@ body {
     margin-top: 3px;
     font-style: italic;
 }
+
+/* --- Slideshow Background --- */
+.slideshow-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1920px;
+    height: 1080px;
+    z-index: 1;
+    overflow: hidden;
+    background-color: #000;
+}
+
+.slideshow-bg .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    animation: fadeSlide 15s infinite;
+}
+
+.slideshow-bg .slide:nth-child(1) {
+    background-image: url('images/smoky_bbq_jackfruit_slider.png');
+    animation-delay: 0s;
+}
+
+.slideshow-bg .slide:nth-child(2) {
+    background-image: url('images/morning_boost_acai_bowl.png');
+    animation-delay: 5s;
+}
+
+.slideshow-bg .slide:nth-child(3) {
+    background-image: url('images/zesty_chickpea_hummus_wrap.png');
+    animation-delay: 10s;
+}
+
+.slideshow-bg .bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+    /* Dark overlay to make it less bright */
+    z-index: 2;
+}
+
+@keyframes fadeSlide {
+    0% {
+        opacity: 0;
+        transform: scale(1);
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    33% {
+        opacity: 1;
+    }
+
+    43% {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
